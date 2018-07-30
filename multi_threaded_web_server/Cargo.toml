@@ -1,0 +1,6 @@
+[package]
+name = "multi_threaded_web_server"
+version = "0.1.0"
+authors = ["MarcoArazzi <marcoarazzi96@gmail.com>"]
+
+[dependencies]
