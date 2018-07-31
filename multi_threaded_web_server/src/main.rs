@@ -12,17 +12,17 @@ use std::time::Duration;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-    let pool = ThreadPool::new(4);
+    let pool = ThreadPool::new(10).expect("The size must be bigger than zero");
     
     for stream in listener.incoming(){
         
         match stream {
             Ok(stream) =>{
-                     let (buffer, stream) = match handle_shut_down(stream){
-                        Ok((buffer, stream)) => (buffer, stream),
+                     let buffer = match handle_buffer_stream(&stream){
+                        Ok(buffer) => (buffer),
                         Err(())=>{break;},
                      };
-                     pool.execute(move|| {
+                     pool.execute(move || {
                      handle_connection(stream, buffer);
                 })
                 },
@@ -34,7 +34,7 @@ fn main() {
      }
 }
 
-fn handle_shut_down(mut stream: TcpStream)-> Result<([u8; 512], TcpStream),()>{
+fn handle_buffer_stream(mut stream: &TcpStream)-> Result<[u8; 512],()>{
     let mut buffer = [0; 512];  
     stream.read(&mut buffer).expect("Failed to read the message");  
     let close = b"GET /shutdown HTTP/1.1\r\n";
@@ -43,7 +43,7 @@ fn handle_shut_down(mut stream: TcpStream)-> Result<([u8; 512], TcpStream),()>{
        return Err(());
    }
          
-    Ok((buffer, stream))
+    Ok(buffer)
 }
 
 fn handle_connection(mut stream: TcpStream, buffer: [u8; 512]){
